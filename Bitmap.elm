@@ -95,13 +95,35 @@ line pixel origin endpoint bitmap =
             x2 - x1
 
         dy =
-            y2 - y1
+            y1 - y2
+
+        m =
+            (toFloat dy) / (toFloat dx)
 
         xs =
             Array.initialize (dx + 1) identity |> Array.map ((+) x1)
 
         draw x ( bitmap, error, y ) =
-            ( set pixel y x bitmap, error, y )
+            let
+                nextBitmap =
+                    set pixel y x bitmap
+
+                shouldIncrementY =
+                    error + m >= 0.5
+
+                nextError =
+                    if shouldIncrementY then
+                        error + m - 1
+                    else
+                        error + m
+
+                nextY =
+                    if shouldIncrementY then
+                        y - 1
+                    else
+                        y
+            in
+                ( nextBitmap, nextError, nextY )
 
         ( newBitmap, _, _ ) =
             Array.foldl draw ( bitmap, 0, y1 ) xs
