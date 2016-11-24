@@ -20,6 +20,10 @@ type alias Alpha =
     Float
 
 
+type alias Point =
+    ( Int, Int )
+
+
 type Pixel
     = Pixel Red Green Blue Alpha
 
@@ -81,7 +85,7 @@ toggle aPixel bPixel rowIndex colIndex bitmap =
                 bitmap
 
 
-line : Pixel -> ( Int, Int ) -> ( Int, Int ) -> Bitmap -> Bitmap
+line : Pixel -> Point -> Point -> Bitmap -> Bitmap
 line pixel origin endpoint bitmap =
     let
         ( x1, y1 ) =
