@@ -110,7 +110,6 @@ line pixel origin endpoint bitmap =
         ( x2, y2 ) =
             endpoint
 
-        -- 0 <= dx/dy <= 1
         dx =
             x2 - x1
 
@@ -132,6 +131,7 @@ line pixel origin endpoint bitmap =
         ys =
             closedRange y1 y2
 
+        -- 0 <= dx/dy <= 1
         plotFirstOctant x ( bitmap, error, y ) =
             let
                 nextBitmap =
@@ -148,6 +148,7 @@ line pixel origin endpoint bitmap =
             in
                 ( nextBitmap, nextError, nextY )
 
+        -- 1 < dx/dy < inf
         plotSecondOctant y ( bitmap, error, x ) =
             let
                 nextBitmap =
