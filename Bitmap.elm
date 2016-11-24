@@ -101,6 +101,24 @@ closedRange from to =
         Array.initialize quantity identity |> Array.map (sign from)
 
 
+bresenham : Float -> Int -> Float -> (Int -> Int -> Bitmap -> Bitmap) -> Int -> ( Bitmap, Float, Int ) -> ( Bitmap, Float, Int )
+bresenham slope delta correction plot a ( bitmap, error, b ) =
+    let
+        nextBitmap =
+            plot a b bitmap
+
+        shouldAdvance =
+            abs (error + slope) > 0.5
+
+        ( nextError, nextB ) =
+            if shouldAdvance then
+                ( error + slope + correction, b + delta )
+            else
+                ( error + slope, b )
+    in
+        ( nextBitmap, nextError, nextB )
+
+
 line : Pixel -> Point -> Point -> Bitmap -> Bitmap
 line pixel origin endpoint bitmap =
     let
@@ -125,98 +143,58 @@ line pixel origin endpoint bitmap =
         rM =
             (toFloat dx) / (toFloat dy)
 
-        xs =
-            closedRange x1 x2
+        setBA a b bitmap =
+            set pixel b a bitmap
 
-        ys =
-            closedRange y1 y2
-
-        -- 0 <= dx/dy <= 1
-        plotFirstOctant x ( bitmap, error, y ) =
-            let
-                nextBitmap =
-                    set pixel y x bitmap
-
-                shouldIncrementY =
-                    error + m >= 0.5
-
-                ( nextError, nextY ) =
-                    if shouldIncrementY then
-                        ( error + m - 1, y + 1 )
-                    else
-                        ( error + m, y )
-            in
-                ( nextBitmap, nextError, nextY )
-
-        -- 0 > dx/dy >= -1
-        plotEighthOctant x ( bitmap, error, y ) =
-            let
-                nextBitmap =
-                    set pixel y x bitmap
-
-                shouldDecrementY =
-                    error + m <= -0.5
-
-                ( nextError, nextY ) =
-                    if shouldDecrementY then
-                        ( error + m + 1, y - 1 )
-                    else
-                        ( error + m, y )
-            in
-                ( nextBitmap, nextError, nextY )
-
-        -- 1 < dx/dy < inf
-        plotSecondOctant y ( bitmap, error, x ) =
-            let
-                nextBitmap =
-                    set pixel y x bitmap
-
-                shouldIncrementX =
-                    error + rM >= 0.5
-
-                ( nextError, nextX ) =
-                    if shouldIncrementX then
-                        ( error + rM - 1, x + 1 )
-                    else
-                        ( error + rM, x )
-            in
-                ( nextBitmap, nextError, nextX )
-
-        plotSeventhOctant y ( bitmap, error, x ) =
-            let
-                nextBitmap =
-                    set pixel y x bitmap
-
-                shouldIncrementX =
-                    error + rM <= -0.5
-
-                ( nextError, nextX ) =
-                    if shouldIncrementX then
-                        ( error + rM + 1, x + 1 )
-                    else
-                        ( error + rM, x )
-            in
-                ( nextBitmap, nextError, nextX )
+        setAB a b bitmap =
+            set pixel a b bitmap
 
         ( plotFunc, interval, start ) =
             if m >= 0 && m <= 1 && x1 < x2 then
-                ( plotFirstOctant, closedRange x1 x2, y1 )
+                ( bresenham m 1 -1 setBA
+                , closedRange x1 x2
+                , y1
+                )
             else if m >= 0 && m <= 1 && x2 < x1 then
-                ( plotFirstOctant, closedRange x2 x1, y2 )
+                ( bresenham m 1 -1 setBA
+                , closedRange x2 x1
+                , y2
+                )
             else if m > 1 && y1 < y2 then
-                ( plotSecondOctant, closedRange y1 y2, x1 )
+                ( bresenham rM 1 -1 setAB
+                , closedRange y1 y2
+                , x1
+                )
             else if m > 1 && y2 < y1 then
-                ( plotSecondOctant, closedRange y2 y1, x2 )
+                ( bresenham rM 1 -1 setAB
+                , closedRange y2 y1
+                , x2
+                )
             else if m < 0 && m >= -1 && x1 < x2 then
-                ( plotEighthOctant, closedRange x1 x2, y1 )
+                ( bresenham m -1 1 setBA
+                , closedRange x1 x2
+                , y1
+                )
             else if m < 0 && m >= -1 && x2 < x1 then
-                ( plotEighthOctant, closedRange x2 x1, y2 )
+                ( bresenham m -1 1 setBA
+                , closedRange x2 x1
+                , y2
+                )
             else if m < -1 && y2 < y1 then
-                ( plotSeventhOctant, closedRange y1 y2, x1 )
+                ( bresenham rM 1 1 setAB
+                , closedRange y1 y2
+                , x1
+                )
             else if m < -1 && y2 > y1 then
-                ( plotSeventhOctant, closedRange y2 y1, x2 )
+                ( bresenham rM 1 1 setAB
+                , closedRange y2 y1
+                , x2
+                )
             else
-                ( plotFirstOctant, closedRange x1 x2, y1 )
+                ( bresenham m 1 -1 setBA
+                , closedRange x1 x2
+                , y1
+                )
 
         ( newBitmap, _, _ ) =
             Array.foldl plotFunc ( bitmap, 0, start ) interval
