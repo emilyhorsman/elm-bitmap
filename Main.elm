@@ -65,18 +65,18 @@ init =
     { t = 0
     , bitmap =
         Bitmap.create 64 white
-            |> Bitmap.line black ( 32, 32 ) ( 63, 63 )
-            |> Bitmap.line black ( 31, 32 ) ( 63, 48 )
-            |> Bitmap.line black ( 32, 31 ) ( 48, 63 )
-            |> Bitmap.line black ( 31, 32 ) ( 63, 16 )
-            |> Bitmap.line black ( 31, 32 ) ( 63, 0 )
-            |> Bitmap.line black ( 32, 32 ) ( 48, 0 )
-            |> Bitmap.line black ( 31, 32 ) ( 17, 63 )
+            |> Bitmap.line black ( 0, 0 ) ( 63, 63 )
+            |> Bitmap.line black ( 63, 63 ) ( 0, 0 )
             |> Bitmap.line black ( 0, 63 ) ( 63, 0 )
-            |> Bitmap.line black ( 32, 32 ) ( 0, 48 )
-            |> Bitmap.line black ( 32, 32 ) ( 16, 0 )
-            |> Bitmap.line black ( 32, 32 ) ( 0, 0 )
-            |> Bitmap.line black ( 32, 32 ) ( 0, 16 )
+            |> Bitmap.line black ( 63, 0 ) ( 0, 63 )
+            |> Bitmap.line black ( 0, 16 ) ( 63, 48 )
+            |> Bitmap.line black ( 63, 48 ) ( 0, 16 )
+            |> Bitmap.line black ( 0, 48 ) ( 63, 16 )
+            |> Bitmap.line black ( 63, 16 ) ( 0, 48 )
+            |> Bitmap.line black ( 16, 63 ) ( 48, 0 )
+            |> Bitmap.line black ( 48, 0 ) ( 16, 63 )
+            |> Bitmap.line black ( 48, 63 ) ( 16, 0 )
+            |> Bitmap.line black ( 16, 0 ) ( 48, 63 )
     }
 
 
