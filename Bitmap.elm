@@ -205,7 +205,7 @@ line pixel origin endpoint bitmap =
                 ( plotSecondOctant, closedRange y1 y2, x1 )
             else if m < 0 && m >= -1 then
                 ( plotEighthOctant, closedRange x1 x2, y1 )
-            else if m < -1 then
+            else if m < -1 && y2 < y1 then
                 ( plotSeventhOctant, closedRange y1 y2, x1 )
             else
                 ( plotFirstOctant, closedRange x1 x2, y1 )
