@@ -82,7 +82,7 @@ update message model =
     case message of
         Toggle row col ->
             { model
-                | bitmap = Bitmap.toggle model.bitmap black white row col
+                | bitmap = Bitmap.toggle black white row col model.bitmap
             }
 
         _ ->

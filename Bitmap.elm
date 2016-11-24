@@ -37,8 +37,8 @@ create length defaultFill =
         Array.repeat length row
 
 
-set : Bitmap -> Pixel -> Int -> Int -> Bitmap
-set bitmap newFill rowIndex colIndex =
+set : Pixel -> Int -> Int -> Bitmap -> Bitmap
+set newFill rowIndex colIndex bitmap =
     let
         set arr =
             Array.set colIndex newFill arr
@@ -54,16 +54,16 @@ set bitmap newFill rowIndex colIndex =
                 bitmap
 
 
-get : Bitmap -> Int -> Int -> Maybe Pixel
-get bitmap rowIndex colIndex =
+get : Int -> Int -> Bitmap -> Maybe Pixel
+get rowIndex colIndex bitmap =
     Maybe.andThen (Array.get rowIndex bitmap) (Array.get colIndex)
 
 
-toggle : Bitmap -> Pixel -> Pixel -> Int -> Int -> Bitmap
-toggle bitmap aPixel bPixel rowIndex colIndex =
+toggle : Pixel -> Pixel -> Int -> Int -> Bitmap -> Bitmap
+toggle aPixel bPixel rowIndex colIndex bitmap =
     let
         curPixel =
-            get bitmap rowIndex colIndex
+            get rowIndex colIndex bitmap
 
         alternate pixel =
             if pixel == aPixel then
