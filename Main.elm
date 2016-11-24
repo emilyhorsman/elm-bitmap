@@ -16,7 +16,7 @@ drawPixel rowIndex colIndex pixel =
             (toFloat colIndex) * cellSize
 
         y =
-            (toFloat rowIndex) * -cellSize
+            (toFloat rowIndex) * cellSize
     in
         square cellSize
             |> filled (rgba (toFloat r) (toFloat g) (toFloat b) a)
@@ -74,7 +74,7 @@ init =
 view model =
     let
         center =
-            move ( cellSize * -32, cellSize * 32 )
+            move ( cellSize * -32, cellSize * -32 )
     in
         collage 600
             600
