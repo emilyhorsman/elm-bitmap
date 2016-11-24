@@ -120,7 +120,7 @@ line pixel origin endpoint bitmap =
         ys =
             closedRange y1 y2
 
-        draw x ( bitmap, error, y ) =
+        plotFirstOctant x ( bitmap, error, y ) =
             let
                 nextBitmap =
                     set pixel y x bitmap
@@ -142,7 +142,37 @@ line pixel origin endpoint bitmap =
             in
                 ( nextBitmap, nextError, nextY )
 
+        plotSecondOctant y ( bitmap, error, x ) =
+            let
+                nextBitmap =
+                    set pixel y x bitmap
+
+                shouldIncrementX =
+                    error + m >= 0.5
+
+                nextError =
+                    if shouldIncrementX then
+                        error + m - 1
+                    else
+                        error + m
+
+                nextX =
+                    if shouldIncrementX then
+                        y - 1
+                    else
+                        y
+            in
+                ( nextBitmap, nextError, nextX )
+
+        ( plotFunc, interval, start ) =
+            if m >= 0 && m <= 1 then
+                ( plotFirstOctant, closedRange x1 x2, y1 )
+            else if m >= 1 then
+                ( plotSecondOctant, closedRange y1 y2, x1 )
+            else
+                ( plotFirstOctant, closedRange x1 x2, y1 )
+
         ( newBitmap, _, _ ) =
-            Array.foldl draw ( bitmap, 0, y1 ) xs
+            Array.foldl plotFunc ( bitmap, 0, start ) interval
     in
         newBitmap

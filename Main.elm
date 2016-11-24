@@ -63,7 +63,11 @@ main =
 
 init =
     { t = 0
-    , bitmap = Bitmap.create 64 white |> Bitmap.line black ( 1, 62 ) ( 62, 10 )
+    , bitmap =
+        Bitmap.create 64 white
+            |> Bitmap.line black ( 1, 62 ) ( 62, 1 )
+            |> Bitmap.line black ( 1, 62 ) ( 62, 31 )
+            |> Bitmap.line black ( 1, 62 ) ( 31, 1 )
     }
 
 
