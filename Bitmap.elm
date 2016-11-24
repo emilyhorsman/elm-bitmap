@@ -90,9 +90,15 @@ closedRange from to =
     let
         -- Add one for closed interval.
         quantity =
-            to - from + 1
+            abs (to - from) + 1
+
+        sign =
+            if from <= to then
+                (+)
+            else
+                (-)
     in
-        Array.initialize quantity identity |> Array.map ((+) from)
+        Array.initialize quantity identity |> Array.map (sign from)
 
 
 line : Pixel -> Point -> Point -> Bitmap -> Bitmap
@@ -144,23 +150,29 @@ line pixel origin endpoint bitmap =
 
         plotSecondOctant y ( bitmap, error, x ) =
             let
+                -- We cannot use the traditional slope (y per x) since we're
+                -- now plotting through ys instead of xs. We need to use
+                -- the units x per unit y.
+                slope =
+                    (toFloat dx) / (toFloat dy)
+
                 nextBitmap =
                     set pixel y x bitmap
 
                 shouldIncrementX =
-                    error + m >= 0.5
+                    error + slope >= 0.5
 
                 nextError =
                     if shouldIncrementX then
-                        error + m - 1
+                        error + slope - 1
                     else
-                        error + m
+                        error + slope
 
                 nextX =
                     if shouldIncrementX then
-                        y - 1
+                        x + 1
                     else
-                        y
+                        x
             in
                 ( nextBitmap, nextError, nextX )
 
