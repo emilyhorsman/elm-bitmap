@@ -85,6 +85,16 @@ toggle aPixel bPixel rowIndex colIndex bitmap =
                 bitmap
 
 
+closedRange : Int -> Int -> Array Int
+closedRange from to =
+    let
+        -- Add one for closed interval.
+        quantity =
+            to - from + 1
+    in
+        Array.initialize quantity identity |> Array.map ((+) from)
+
+
 line : Pixel -> Point -> Point -> Bitmap -> Bitmap
 line pixel origin endpoint bitmap =
     let
@@ -105,7 +115,10 @@ line pixel origin endpoint bitmap =
             (toFloat dy) / (toFloat dx)
 
         xs =
-            Array.initialize (dx + 1) identity |> Array.map ((+) x1)
+            closedRange x1 x2
+
+        ys =
+            closedRange y1 y2
 
         draw x ( bitmap, error, y ) =
             let
