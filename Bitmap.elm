@@ -115,10 +115,16 @@ line pixel origin endpoint bitmap =
             x2 - x1
 
         dy =
-            y1 - y2
+            y2 - y1
 
         m =
             (toFloat dy) / (toFloat dx)
+
+        -- We cannot use the traditional slope (y per x) if we plot through
+        -- ys instead of xs. We would need to use the reciprocal slope, the
+        -- units x per unit y.
+        rM =
+            (toFloat dx) / (toFloat dy)
 
         xs =
             closedRange x1 x2
@@ -134,45 +140,27 @@ line pixel origin endpoint bitmap =
                 shouldIncrementY =
                     error + m >= 0.5
 
-                nextError =
+                ( nextError, nextY ) =
                     if shouldIncrementY then
-                        error + m - 1
+                        ( error + m - 1, y + 1 )
                     else
-                        error + m
-
-                nextY =
-                    if shouldIncrementY then
-                        y - 1
-                    else
-                        y
+                        ( error + m, y )
             in
                 ( nextBitmap, nextError, nextY )
 
         plotSecondOctant y ( bitmap, error, x ) =
             let
-                -- We cannot use the traditional slope (y per x) since we're
-                -- now plotting through ys instead of xs. We need to use
-                -- the units x per unit y.
-                slope =
-                    (toFloat dx) / (toFloat dy)
-
                 nextBitmap =
                     set pixel y x bitmap
 
                 shouldIncrementX =
-                    error + slope >= 0.5
+                    error + rM >= 0.5
 
-                nextError =
+                ( nextError, nextX ) =
                     if shouldIncrementX then
-                        error + slope - 1
+                        ( error + rM - 1, x + 1 )
                     else
-                        error + slope
-
-                nextX =
-                    if shouldIncrementX then
-                        x + 1
-                    else
-                        x
+                        ( error + rM, x )
             in
                 ( nextBitmap, nextError, nextX )
 
