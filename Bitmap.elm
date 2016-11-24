@@ -199,14 +199,22 @@ line pixel origin endpoint bitmap =
                 ( nextBitmap, nextError, nextX )
 
         ( plotFunc, interval, start ) =
-            if m >= 0 && m <= 1 then
+            if m >= 0 && m <= 1 && x1 < x2 then
                 ( plotFirstOctant, closedRange x1 x2, y1 )
-            else if m > 1 then
+            else if m >= 0 && m <= 1 && x2 < x1 then
+                ( plotFirstOctant, closedRange x2 x1, y2 )
+            else if m > 1 && y1 < y2 then
                 ( plotSecondOctant, closedRange y1 y2, x1 )
-            else if m < 0 && m >= -1 then
+            else if m > 1 && y2 < y1 then
+                ( plotSecondOctant, closedRange y2 y1, x2 )
+            else if m < 0 && m >= -1 && x1 < x2 then
                 ( plotEighthOctant, closedRange x1 x2, y1 )
+            else if m < 0 && m >= -1 && x2 < x1 then
+                ( plotEighthOctant, closedRange x2 x1, y2 )
             else if m < -1 && y2 < y1 then
                 ( plotSeventhOctant, closedRange y1 y2, x1 )
+            else if m < -1 && y2 > y1 then
+                ( plotSeventhOctant, closedRange y2 y1, x2 )
             else
                 ( plotFirstOctant, closedRange x1 x2, y1 )
 
