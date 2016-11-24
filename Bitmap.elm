@@ -148,6 +148,23 @@ line pixel origin endpoint bitmap =
             in
                 ( nextBitmap, nextError, nextY )
 
+        -- 0 > dx/dy >= -1
+        plotEighthOctant x ( bitmap, error, y ) =
+            let
+                nextBitmap =
+                    set pixel y x bitmap
+
+                shouldDecrementY =
+                    error + m <= -0.5
+
+                ( nextError, nextY ) =
+                    if shouldDecrementY then
+                        ( error + m + 1, y - 1 )
+                    else
+                        ( error + m, y )
+            in
+                ( nextBitmap, nextError, nextY )
+
         -- 1 < dx/dy < inf
         plotSecondOctant y ( bitmap, error, x ) =
             let
@@ -170,6 +187,8 @@ line pixel origin endpoint bitmap =
                 ( plotFirstOctant, closedRange x1 x2, y1 )
             else if m >= 1 then
                 ( plotSecondOctant, closedRange y1 y2, x1 )
+            else if m < 0 && m >= -1 then
+                ( plotEighthOctant, closedRange x1 x2, y1 )
             else
                 ( plotFirstOctant, closedRange x1 x2, y1 )
 
