@@ -70,6 +70,7 @@ init =
             |> Bitmap.line black ( 32, 31 ) ( 48, 63 )
             |> Bitmap.line black ( 31, 32 ) ( 63, 16 )
             |> Bitmap.line black ( 31, 32 ) ( 63, 0 )
+            |> Bitmap.line black ( 32, 32 ) ( 48, 0 )
     }
 
 

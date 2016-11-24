@@ -182,13 +182,31 @@ line pixel origin endpoint bitmap =
             in
                 ( nextBitmap, nextError, nextX )
 
+        plotSeventhOctant y ( bitmap, error, x ) =
+            let
+                nextBitmap =
+                    set pixel y x bitmap
+
+                shouldIncrementX =
+                    error + rM <= -0.5
+
+                ( nextError, nextX ) =
+                    if shouldIncrementX then
+                        ( error + rM + 1, x + 1 )
+                    else
+                        ( error + rM, x )
+            in
+                ( nextBitmap, nextError, nextX )
+
         ( plotFunc, interval, start ) =
             if m >= 0 && m <= 1 then
                 ( plotFirstOctant, closedRange x1 x2, y1 )
-            else if m >= 1 then
+            else if m > 1 then
                 ( plotSecondOctant, closedRange y1 y2, x1 )
             else if m < 0 && m >= -1 then
                 ( plotEighthOctant, closedRange x1 x2, y1 )
+            else if m < -1 then
+                ( plotSeventhOctant, closedRange y1 y2, x1 )
             else
                 ( plotFirstOctant, closedRange x1 x2, y1 )
 
