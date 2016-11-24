@@ -1,4 +1,4 @@
-module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle)
+module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line)
 
 import Array exposing (Array)
 import Color
@@ -75,7 +75,35 @@ toggle aPixel bPixel rowIndex colIndex bitmap =
     in
         case curPixel of
             Just pixel ->
-                set bitmap (alternate pixel) rowIndex colIndex
+                set (alternate pixel) rowIndex colIndex bitmap
 
             Nothing ->
                 bitmap
+
+
+line : Pixel -> ( Int, Int ) -> ( Int, Int ) -> Bitmap -> Bitmap
+line pixel origin endpoint bitmap =
+    let
+        ( x1, y1 ) =
+            origin
+
+        ( x2, y2 ) =
+            endpoint
+
+        -- 0 <= dx/dy <= 1
+        dx =
+            x2 - x1
+
+        dy =
+            y2 - y1
+
+        xs =
+            Array.initialize (dx + 1) identity |> Array.map ((+) x1)
+
+        draw x ( bitmap, error, y ) =
+            ( set pixel y x bitmap, error, y )
+
+        ( newBitmap, _, _ ) =
+            Array.foldl draw ( bitmap, 0, y1 ) xs
+    in
+        newBitmap
