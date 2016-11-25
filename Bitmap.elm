@@ -1,4 +1,4 @@
-module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line)
+module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line, circle)
 
 import Array exposing (Array)
 import Color
@@ -252,3 +252,8 @@ line pixel origin endpoint bitmap =
             Array.foldl plotFunc ( bitmap, 0, start ) interval
     in
         newBitmap
+
+
+circle : Pixel -> Int -> Bitmap -> Bitmap
+circle pixel radius bitmap =
+    bitmap
