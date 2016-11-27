@@ -256,46 +256,47 @@ plotSymmetricalOctants : (Int -> Int -> Bitmap -> Bitmap) -> Bitmap -> Int -> In
 plotSymmetricalOctants plot bitmap x y =
     bitmap
         |> plot x y
-        |> plot -x y
-        |> plot -x -y
-        |> plot x -y
         |> plot y x
         |> plot -y x
+        |> plot -x y
+        |> plot -x -y
         |> plot -y -x
         |> plot y -x
+        |> plot x -y
 
 
-bresenhamCirclePlot : (Int -> Int -> Bitmap -> Bitmap) -> Int -> Int -> ( Bitmap, Int, Int, Int, Int ) -> ( Bitmap, Int, Int, Int, Int )
-bresenhamCirclePlot plot radius y ( bitmap, x, xChange, yChange, radiusError ) =
-    let
-        nextBitmap =
-            plotSymmetricalOctants plot bitmap x y
+bresenhamCirclePlot : (Int -> Int -> Bitmap -> Bitmap) -> Int -> Int -> Int -> Int -> Bitmap -> Bitmap
+bresenhamCirclePlot plot radius x y error bitmap =
+    if x < y then
+        bitmap
+    else
+        let
+            nextBitmap =
+                plotSymmetricalOctants plot bitmap x y
 
-        -- We are trying to minimize the deviance/error from the true equation of the
-        -- circle, just as with the line plot algorithm.
-        -- See http://web.engr.oregonstate.edu/~sllu/bcircle.pdf for proof.
-        --
-        -- Essentially, we are folding over the y-coordinate interval, thus,
-        -- our y-coordinate value is always going to increment. We need to
-        -- determine whether we should decrement the x-coordinate value or not.
-        -- We can compare Error(x[i] - 1, y[i] + 1) and Error(x[i], y[i] + 1).
-        -- We will return the next x-coordinate value based on which call
-        -- returns the smallest value, thus, the least error. Letting these
-        -- functions be an inequality and reducing it algebraically reduces the
-        -- predicate down to this.
-        shouldDecrementX =
-            2 * (radiusError + yChange) + xChange > 0
+            -- We are trying to minimize the deviance/error from the true equation of the
+            -- circle, just as with the line plot algorithm.
+            -- See http://web.engr.oregonstate.edu/~sllu/bcircle.pdf for proof.
+            --
+            -- Essentially, we are folding over the y-coordinate interval, thus,
+            -- our y-coordinate value is always going to increment. We need to
+            -- determine whether we should decrement the x-coordinate value or not.
+            -- We can compare Error(x[i] - 1, y[i] + 1) and Error(x[i], y[i] + 1).
+            -- We will return the next x-coordinate value based on which call
+            -- returns the smallest value, thus, the least error. Letting these
+            -- functions be an inequality and reducing it algebraically reduces the
+            -- predicate down to this.
+            shouldDecrementX =
+                2 * (error - x) + 1 > 0
 
-        nextYChange =
-            yChange + 2
+            ( nextX, nextError ) =
+                if shouldDecrementX then
+                    ( x - 1, error + 2 + 2 * (y + 1) - 2 * (x - 1))
+                else
+                    ( x, error + 1 + 2 * (y + 1) )
 
-        ( nextX, nextXChange, nextRadiusError ) =
-            if shouldDecrementX then
-                ( x - 1, xChange + 2, radiusError + yChange + xChange )
-            else
-                ( x, xChange, radiusError + yChange )
-    in
-        ( nextBitmap, nextX, nextXChange, nextYChange, nextRadiusError )
+        in
+            bresenhamCirclePlot plot radius nextX (y + 1) nextError nextBitmap
 
 
 circle : Pixel -> Point -> Int -> Bitmap -> Bitmap
@@ -307,16 +308,10 @@ circle pixel origin radius bitmap =
         plot x y =
             set pixel (y + cY) (x + cX)
 
-        initValues =
-            ( bitmap, radius, 1 - 2 * radius, 1, 0 )
-
         interval =
             closedRange 0 radius
-
-        ( nextBitmap, _, _, _, _ ) =
-            Array.foldl (bresenhamCirclePlot plot radius) initValues interval
     in
-        nextBitmap
+        bresenhamCirclePlot plot radius radius 0 0 bitmap
 
 
 computeQuadraticBezierPoint : Point -> Point -> Point -> Int -> Int -> Point
