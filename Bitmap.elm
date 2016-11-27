@@ -1,4 +1,4 @@
-module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line, circle)
+module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line, circle, cubicBezier)
 
 import Array exposing (Array)
 import Color
@@ -317,3 +317,51 @@ circle pixel origin radius bitmap =
             Array.foldl (bresenhamCirclePlot plot radius) initValues interval
     in
         nextBitmap
+
+
+computeCubicBezierPoint : Point -> Point -> Point -> Point -> Int -> Int -> Point
+computeCubicBezierPoint ( x0, y0 ) ( x1, y1 ) ( x2, y2 ) ( x3, y3 ) segments i =
+    let
+        t =
+            (toFloat i) / (toFloat segments)
+
+        a =
+            (1 - t) ^ 3
+
+        b =
+            3 * t * (1 - t) ^ 2
+
+        c =
+            3 * t ^ 2 * (1 - t)
+
+        d =
+            t ^ 3
+
+        x =
+            floor (a * (toFloat x0) + b * (toFloat x1) + c * (toFloat x2) + d * (toFloat x3))
+
+        y =
+            floor (a * (toFloat y0) + b * (toFloat y1) * c * (toFloat y2) * d * (toFloat y3))
+    in
+        ( x, y )
+
+
+plotCubicBezier : Pixel -> List Point -> Bitmap -> Bitmap
+plotCubicBezier pixel points bitmap =
+    case points of
+        p0 :: p1 :: remainder ->
+            line pixel p0 p1 bitmap
+                |> plotCubicBezier pixel (p1 :: remainder)
+
+        _ ->
+            bitmap
+
+
+cubicBezier : Pixel -> Point -> Point -> Point -> Point -> Int -> Bitmap -> Bitmap
+cubicBezier pixel p0 p1 p2 p3 segments bitmap =
+    let
+        points =
+            [0..segments]
+                |> List.map (computeCubicBezierPoint p0 p1 p2 p3 segments)
+    in
+        plotCubicBezier pixel points bitmap
