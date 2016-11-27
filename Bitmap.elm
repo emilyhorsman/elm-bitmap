@@ -34,11 +34,9 @@ type alias Bitmap =
 
 create : Int -> Pixel -> Bitmap
 create length defaultFill =
-    let
-        row =
-            Array.repeat length defaultFill
-    in
-        Array.repeat length row
+    defaultFill
+        |> Array.repeat length
+        |> Array.repeat length
 
 
 set : Pixel -> Int -> Int -> Bitmap -> Bitmap
