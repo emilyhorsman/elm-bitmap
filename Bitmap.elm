@@ -298,9 +298,12 @@ bresenhamCirclePlot plot radius y ( bitmap, x, xChange, yChange, radiusError ) =
         ( nextBitmap, nextX, nextXChange, nextYChange, nextRadiusError )
 
 
-circle : Pixel -> Int -> Int -> Int -> Bitmap -> Bitmap
-circle pixel cX cY radius bitmap =
+circle : Pixel -> Point -> Int -> Bitmap -> Bitmap
+circle pixel origin radius bitmap =
     let
+        ( cX, cY ) =
+            origin
+
         plot x y =
             set pixel (y + cY) (x + cX)
 
