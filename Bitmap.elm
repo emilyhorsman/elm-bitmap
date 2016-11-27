@@ -276,7 +276,7 @@ bresenhamCirclePlot plot radius x y error bitmap =
 
             -- We are trying to minimize the deviance/error from the true equation of the
             -- circle, just as with the line plot algorithm.
-            -- See http://web.engr.oregonstate.edu/~sllu/bcircle.pdf for proof.
+            -- See https://en.wikipedia.org/wiki/Midpoint_circle_algorithm for proof.
             --
             -- Essentially, we are folding over the y-coordinate interval, thus,
             -- our y-coordinate value is always going to increment. We need to
