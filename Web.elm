@@ -65,6 +65,8 @@ type Msg
     | ChangeRadius Int String
     | ChangePoint Int Int Int String
     | ChangeFloatPoint Int Int Int String
+    | AddFloatPoint Int
+    | RemoveFloatPoint Int Int
 
 
 removeInstruction : Int -> Instructions -> Instructions
@@ -196,6 +198,49 @@ changePoint index pointIndex component value instructions =
         changeInstructions index transform instructions
 
 
+addFloatPoint : Int -> Instructions -> Instructions
+addFloatPoint index instructions =
+    let
+        transform instruction =
+            case instruction of
+                Curve pixel points ->
+                    Curve pixel (points ++ [ ( 0, 0 ) ])
+
+                _ ->
+                    instruction
+    in
+        changeInstructions index transform instructions
+
+
+removeFromList : Int -> List a -> List a
+removeFromList index list =
+    let
+        drop item ( items, i, hasDropped ) =
+            if not hasDropped && i == index then
+                ( items, i + 1, True )
+            else
+                ( item :: items, i + 1, False )
+
+        ( nextList, _, _ ) =
+            List.foldl drop ( [], 0, False ) list
+    in
+        nextList
+
+
+removeFloatPoint : Int -> Int -> Instructions -> Instructions
+removeFloatPoint index pointIndex instructions =
+    let
+        transform instruction =
+            case instruction of
+                Curve pixel points ->
+                    Curve pixel (removeFromList pointIndex points)
+
+                _ ->
+                    instruction
+    in
+        changeInstructions index transform instructions
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
@@ -216,6 +261,12 @@ update msg model =
 
         ChangeFloatPoint index pointIndex component value ->
             { model | instructions = changeFloatPoint index pointIndex component value model.instructions }
+
+        RemoveFloatPoint index pointIndex ->
+            { model | instructions = removeFloatPoint index pointIndex model.instructions }
+
+        AddFloatPoint index ->
+            { model | instructions = addFloatPoint index model.instructions }
 
 
 view : Model -> Html Msg
@@ -287,7 +338,11 @@ pointInput ( x, y ) msg =
 
 drawInstructionPoint : Int -> Int -> Bitmap.FloatPoint -> Html Msg
 drawInstructionPoint index pointIndex point =
-    pointInput point (ChangeFloatPoint index pointIndex)
+    div
+        []
+        [ pointInput point (ChangeFloatPoint index pointIndex)
+        , button [ onClick (RemoveFloatPoint index pointIndex) ] [ text "Remove Point" ]
+        ]
 
 
 drawInstructionCommands : Int -> Instruction -> Html Msg
@@ -304,6 +359,7 @@ drawInstructionCommands index instruction =
             span []
                 ([ text "Curve"
                  , colourInput (pixelToHex pixel) (ChangePixel index)
+                 , button [ onClick (AddFloatPoint index) ] [ text "Add Point" ]
                  ]
                     ++ List.indexedMap (drawInstructionPoint index) points
                 )
