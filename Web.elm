@@ -229,9 +229,9 @@ view model =
         [ model.bitmap
             |> withInstructions model.instructions
             |> drawBitmap
-        , model.instructions
-            |> drawUserInstructions
+        , drawUserInstructions model.instructions
         , drawInstructionPalette
+        , drawInstructionCode model.instructions
         ]
 
 
@@ -451,3 +451,52 @@ drawBitmap bitmap =
                 , Svg.Attributes.height "400"
                 , Svg.Attributes.viewBox "0 0 64 64"
                 ]
+
+
+drawInstructionCode : Instructions -> Html Msg
+drawInstructionCode instructions =
+    let
+        writtenInstructions =
+            instructions
+                |> Array.map write
+                |> Array.map prefix
+                |> Array.toList
+
+        prefix str =
+            "    |> " ++ str
+
+        serializePixel (Bitmap.Pixel r g b a) =
+            "(Bitmap.Pixel " ++ (toString r) ++ "," ++ (toString g) ++ "," ++ (toString b) ++ "," ++ (toString a) ++ ")"
+
+        write instruction =
+            let
+                symbols =
+                    case instruction of
+                        Line pixel p0 p1 ->
+                            [ "Bitmap.line"
+                            , serializePixel pixel
+                            , toString p0
+                            , toString p1
+                            ]
+
+                        Circle pixel p0 radius ->
+                            [ "Bitmap.circle"
+                            , serializePixel pixel
+                            , toString p0
+                            , toString radius
+                            ]
+
+                        Curve pixel points ->
+                            [ "Bitmap.curve"
+                            , serializePixel pixel
+                            , toString points
+                            ]
+            in
+                String.join " " symbols
+
+        lines =
+            "Bitmap.create 64 white" :: writtenInstructions
+    in
+        div
+            [ Html.Attributes.style [ ( "font-family", "monospace" ), ( "white-space", "pre" ) ] ]
+            [ String.join "\n" lines |> text ]
