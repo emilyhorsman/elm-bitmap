@@ -1,15 +1,16 @@
 module Web exposing (..)
 
 import Array exposing (Array)
-import Html exposing (Html, div, button, text)
+import Char
+import Html exposing (Html, div, button, text, input, span)
 import Html.App as App
-import Html.Attributes
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (type', value)
+import Html.Events exposing (onClick, onInput)
 import String
 import Svg
 import Svg.Attributes
 import Bitmap exposing (Bitmap)
-
+import Debug exposing (log)
 
 black =
     Bitmap.Pixel 0 0 0 1
@@ -48,11 +49,10 @@ init =
     { bitmap = Bitmap.create 64 cyan
     , instructions =
         Array.fromList
-            [ Circle black ( 43, 40 ) 3
+            [ Circle (Bitmap.Pixel 51 153 255 1) ( 43, 40 ) 3
             , Circle black ( 20, 40 ) 3
             , Circle black ( 31, 31 ) 25
             , Curve black [ ( 15, 25 ), ( 31.5, 10 ), ( 48, 25 ) ]
-            , Line black ( 0, 0 ) ( 63, 63 )
             ]
     }
 
@@ -60,6 +60,7 @@ init =
 type Msg
     = Remove Int
     | Add Instruction
+    | ChangePixel Int String
 
 
 removeInstruction : Int -> Instructions -> Instructions
@@ -74,6 +75,37 @@ removeInstruction index instructions =
         Array.append a b
 
 
+changePixel : Int -> String -> Instructions -> Instructions
+changePixel index value instructions =
+    let
+        newPixel =
+            hexToPixel value
+
+        instruction =
+            Array.get index instructions
+
+        transformInstruction instruction =
+            case instruction of
+                Circle _ point radius ->
+                    Circle newPixel point radius
+
+                Curve _ points ->
+                    Curve newPixel points
+
+                Line _ p0 p1 ->
+                    Line newPixel p0 p1
+
+        nextInstruction =
+            Maybe.map transformInstruction instruction
+    in
+        case nextInstruction of
+            Just instr ->
+                Array.set index instr instructions
+
+            Nothing ->
+                instructions
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
@@ -82,6 +114,9 @@ update msg model =
 
         Add instruction ->
             { model | instructions = Array.push instruction model.instructions }
+
+        ChangePixel index value ->
+            { model | instructions = changePixel index value model.instructions }
 
 
 view : Model -> Html Msg
@@ -120,11 +155,28 @@ drawInstructionPalette =
             (List.map drawButton commands)
 
 
+drawInstructionCommands : Int -> Instruction -> Html Msg
+drawInstructionCommands index instruction =
+    case instruction of
+        Circle pixel ( x, y ) radius ->
+            span []
+                [ input
+                    [ type' "color"
+                    , value (pixelToHex pixel)
+                    , onInput (ChangePixel index)
+                    ]
+                    []
+                ]
+
+        _ ->
+            span [] []
+
+
 drawUserInstruction : Int -> Instruction -> Html Msg
 drawUserInstruction index instruction =
     div
         []
-        [ text (toString instruction)
+        [ drawInstructionCommands index instruction
         , button [ onClick (Remove index) ] [ text "Remove" ]
         ]
 
@@ -166,6 +218,60 @@ pixelToAttribute pixel =
                 |> String.join ","
     in
         "rgba(" ++ values ++ "," ++ (toString a) ++ ")"
+
+
+intToHex : Int -> String
+intToHex value =
+    let
+        values =
+            [ value // 16, value % 16 ]
+
+        toHex int =
+            if int <= 9 then
+                Char.fromCode (int + 48)
+            else
+                Char.fromCode (int + 87)
+    in
+        values |> List.map toHex |> String.fromList
+
+
+pixelToHex : Bitmap.Pixel -> String
+pixelToHex (Bitmap.Pixel r g b _) =
+    "#" ++ (intToHex r) ++ (intToHex g) ++ (intToHex b)
+
+
+hexToInt : Char -> Int
+hexToInt char =
+    let
+        code =
+            Char.toCode char
+    in
+        -- ['0', '9'] => [48, 57]
+        -- ['a', 'f'] => [97, 102]
+        if code <= 57 then
+            code - 48
+        else
+            code - 87
+
+
+hexToPixel : String -> Bitmap.Pixel
+hexToPixel hex =
+    case String.toList hex of
+        '#' :: r16 :: r1 :: g16 :: g1 :: b16 :: b1 :: [] ->
+            let
+                r =
+                    (hexToInt r16) * 16 + hexToInt r1
+
+                g =
+                    (hexToInt g16) * 16 + hexToInt g1
+
+                b =
+                    (hexToInt b16) * 16 + hexToInt b1
+            in
+                Bitmap.Pixel r g b 1
+
+        _ ->
+            Bitmap.Pixel 0 0 0 1
 
 
 drawPixel rowIndex colIndex pixel =
