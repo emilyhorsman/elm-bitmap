@@ -1,7 +1,8 @@
-module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line, circle, cubicBezier, quadraticBezier)
+module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line, circle, cubicBezier, quadraticBezier, curve)
 
 import Array exposing (Array)
 import Color
+import List
 
 
 type alias Red =
@@ -22,6 +23,10 @@ type alias Alpha =
 
 type alias Point =
     ( Int, Int )
+
+
+type alias FloatPoint =
+    ( Float, Float )
 
 
 type Pixel
@@ -405,3 +410,45 @@ cubicBezier pixel p0 p1 p2 p3 segments bitmap =
                 |> List.map (computeCubicBezierPoint p0 p1 p2 p3 segments)
     in
         plotCubicBezier pixel points bitmap
+
+
+computeBezierPoint : Float -> FloatPoint -> FloatPoint -> FloatPoint
+computeBezierPoint t ( x0, y0 ) ( x1, y1 ) =
+    ( (1 - t) * x0 + t * x1
+    , (1 - t) * y0 + t * y1
+    )
+
+
+computeBezierPoints : Float -> List FloatPoint -> List FloatPoint
+computeBezierPoints t points =
+    case points of
+        p0 :: p1 :: remainder ->
+            computeBezierPoint t p0 p1 :: (computeBezierPoints t (p1 :: remainder))
+
+        _ ->
+            []
+
+
+plotCurve : Pixel -> List FloatPoint -> Float -> Bitmap -> Bitmap
+plotCurve pixel points t bitmap =
+    if List.length points == 1 then
+        case List.head points of
+            Just ( x, y ) ->
+                set pixel (floor y) (floor x) bitmap
+
+            _ ->
+                bitmap
+    else
+        plotCurve pixel (computeBezierPoints t points) t bitmap
+
+
+curve : Pixel -> List FloatPoint -> Bitmap -> Bitmap
+curve pixel points bitmap =
+    let
+        segments =
+            50
+
+        tValues =
+            List.map (\i -> i / segments) [1..segments]
+    in
+        List.foldl (plotCurve pixel points) bitmap tValues
