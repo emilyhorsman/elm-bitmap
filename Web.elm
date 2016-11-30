@@ -1,11 +1,12 @@
 module Web exposing (..)
 
-import Array
-import Html exposing (Html, div)
+import Array exposing (Array)
+import Html exposing (Html, div, button, text)
 import Html.App as App
 import Html.Attributes
+import Html.Events exposing (onClick)
 import String
-import Svg exposing (..)
+import Svg
 import Svg.Attributes
 import Bitmap exposing (Bitmap)
 
@@ -32,16 +33,20 @@ type Instruction
     | Line Bitmap.Pixel Bitmap.Point Bitmap.Point
 
 
+type alias Instructions =
+    Array Instruction
+
+
 type alias Model =
     { bitmap : Bitmap.Bitmap
-    , instructions : List Instruction
+    , instructions : Instructions
     }
 
 
 init : Model
 init =
     { bitmap = Bitmap.create 64 cyan
-    , instructions =
+    , instructions = Array.fromList
         [ Circle black ( 43, 40 ) 3
         , Circle black ( 20, 40 ) 3
         , Circle black ( 31, 31 ) 25
@@ -52,12 +57,25 @@ init =
 
 
 type Msg
-    = Noop
+    = Remove Int
+
+
+removeInstruction index instructions =
+    let
+        a =
+            Array.slice 0 index instructions
+
+        b =
+            Array.slice (index + 1) (Array.length instructions) instructions
+    in
+        Array.append a b
 
 
 update : Msg -> Model -> Model
 update msg model =
-    model
+    case msg of
+        Remove index ->
+            { model | instructions = removeInstruction index model.instructions }
 
 
 view : Model -> Html Msg
@@ -71,7 +89,25 @@ view model =
         [ model.bitmap
             |> withInstructions model.instructions
             |> drawBitmap
+        , model.instructions
+            |> drawUserInstructions
         ]
+
+
+drawUserInstruction : Int -> Instruction -> Html Msg
+drawUserInstruction index instruction =
+    div
+        []
+        [ text (toString instruction)
+        , button [ onClick (Remove index) ] [ text "Remove" ]
+        ]
+
+
+drawUserInstructions : Instructions -> Html Msg
+drawUserInstructions instructions =
+    Array.indexedMap drawUserInstruction instructions
+        |> Array.toList
+        |> div []
 
 
 drawInstruction : Instruction -> Bitmap -> Bitmap
@@ -87,9 +123,9 @@ drawInstruction instruction bitmap =
             Bitmap.line pixel p0 p1 bitmap
 
 
-withInstructions : List Instruction -> Bitmap -> Bitmap
+withInstructions : Instructions -> Bitmap -> Bitmap
 withInstructions instructions bitmap =
-    List.foldl drawInstruction bitmap instructions
+    Array.foldl drawInstruction bitmap instructions
 
 
 pixelToAttribute : Bitmap.Pixel -> String
@@ -114,7 +150,7 @@ drawPixel rowIndex colIndex pixel =
         y =
             (toFloat (63 - rowIndex))
     in
-        rect
+        Svg.rect
             [ Svg.Attributes.x (toString x)
             , Svg.Attributes.y (toString y)
             , Svg.Attributes.width "1"
@@ -133,7 +169,7 @@ drawBitmap bitmap =
     in
         Array.indexedMap drawRow bitmap
             |> Array.foldl (++) []
-            |> svg
+            |> Svg.svg
                 [ Svg.Attributes.width "400"
                 , Svg.Attributes.height "400"
                 , Svg.Attributes.viewBox "0 0 64 64"
