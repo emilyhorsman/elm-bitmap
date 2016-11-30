@@ -56,8 +56,11 @@ create length defaultFill =
         |> Array.repeat length
 
 
+{-| colIndex => x-coordinate
+    rowIndex => y-coordinate
+-}
 set : Pixel -> Int -> Int -> Bitmap -> Bitmap
-set newFill rowIndex colIndex bitmap =
+set newFill colIndex rowIndex bitmap =
     let
         set arr =
             Array.set colIndex newFill arr
@@ -73,16 +76,25 @@ set newFill rowIndex colIndex bitmap =
                 bitmap
 
 
+{-| colIndex => x-coordinate
+    rowIndex => y-coordinate
+-}
 get : Int -> Int -> Bitmap -> Maybe Pixel
-get rowIndex colIndex bitmap =
+get colIndex rowIndex bitmap =
     Maybe.andThen (Array.get rowIndex bitmap) (Array.get colIndex)
 
 
+{-| Swap between two pixel values (aPixel and bPixel). Does not modify the pixel
+    if it is neither value.
+
+    colIndex => x-coordinate
+    rowIndex => y-coordinate
+-}
 toggle : Pixel -> Pixel -> Int -> Int -> Bitmap -> Bitmap
-toggle aPixel bPixel rowIndex colIndex bitmap =
+toggle aPixel bPixel colIndex rowIndex bitmap =
     let
         curPixel =
-            get rowIndex colIndex bitmap
+            get colIndex rowIndex bitmap
 
         alternate pixel =
             if pixel == aPixel then
@@ -94,7 +106,7 @@ toggle aPixel bPixel rowIndex colIndex bitmap =
     in
         case curPixel of
             Just pixel ->
-                set (alternate pixel) rowIndex colIndex bitmap
+                set (alternate pixel) colIndex rowIndex bitmap
 
             Nothing ->
                 bitmap
@@ -203,10 +215,10 @@ line pixel origin endpoint bitmap =
             (toFloat dx) / (toFloat dy)
 
         foldingAcrossX a b bitmap =
-            set pixel b a bitmap
+            set pixel a b bitmap
 
         foldingAcrossY a b bitmap =
-            set pixel a b bitmap
+            set pixel b a bitmap
 
         ( plotFunc, interval, start ) =
             if 0 <= m && m <= 1 && x1 < x2 then
@@ -322,7 +334,7 @@ circle pixel origin radius bitmap =
             origin
 
         plot x y =
-            set pixel (y + cY) (x + cX)
+            set pixel (x + cX) (y + cY)
 
         interval =
             closedRange 0 radius
@@ -352,7 +364,7 @@ plotCurve pixel points t bitmap =
     if List.length points == 1 then
         case List.head points of
             Just ( x, y ) ->
-                set pixel (floor y) (floor x) bitmap
+                set pixel (floor x) (floor y) bitmap
 
             _ ->
                 bitmap

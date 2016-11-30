@@ -21,7 +21,7 @@ drawPixel rowIndex colIndex pixel =
         square cellSize
             |> filled (rgba (toFloat r) (toFloat g) (toFloat b) a)
             |> move ( x, y )
-            |> notifyTap (Toggle rowIndex colIndex)
+            |> notifyTap (Toggle colIndex rowIndex)
 
 
 drawBitmap bitmap =
