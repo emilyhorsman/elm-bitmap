@@ -12,6 +12,7 @@ import Svg.Attributes
 import Bitmap exposing (Bitmap)
 import Debug exposing (log)
 
+
 black =
     Bitmap.Pixel 0 0 0 1
 
@@ -160,7 +161,8 @@ drawInstructionCommands index instruction =
     case instruction of
         Circle pixel ( x, y ) radius ->
             span []
-                [ input
+                [ text "Circle"
+                , input
                     [ type' "color"
                     , value (pixelToHex pixel)
                     , onInput (ChangePixel index)
@@ -168,8 +170,27 @@ drawInstructionCommands index instruction =
                     []
                 ]
 
-        _ ->
-            span [] []
+        Curve pixel points ->
+            span []
+                [ text "Curve"
+                , input
+                    [ type' "color"
+                    , value (pixelToHex pixel)
+                    , onInput (ChangePixel index)
+                    ]
+                    []
+                ]
+
+        Line pixel p0 p1 ->
+            span []
+                [ text "Line"
+                , input
+                    [ type' "color"
+                    , value (pixelToHex pixel)
+                    , onInput (ChangePixel index)
+                    ]
+                    []
+                ]
 
 
 drawUserInstruction : Int -> Instruction -> Html Msg
