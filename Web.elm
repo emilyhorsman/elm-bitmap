@@ -2,9 +2,9 @@ module Web exposing (..)
 
 import Array exposing (Array)
 import Char
-import Html exposing (Html, div, button, text, input, span, table, tr, td)
+import Html exposing (Html, div, button, text, input, span, table, tr, td, a)
 import Html.App as App
-import Html.Attributes exposing (type', value)
+import Html.Attributes exposing (type', value, href, target, style)
 import Html.Events exposing (onClick, onInput)
 import String
 import Svg
@@ -278,7 +278,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div
-        [ Html.Attributes.style
+        [ style
             [ ( "margin", "0 auto" )
             , ( "width", "400px" )
             ]
@@ -289,6 +289,12 @@ view model =
         , drawUserInstructions model.instructions
         , drawInstructionPalette
         , drawInstructionCode model.instructions
+        , a
+            [ href "https://github.com/emilyhorsman/elm-bitmap/"
+            , target "_blank"
+            , style [ ( "margin", "1em 0" ), ( "display", "block" ) ]
+            ]
+            [ text "https://github.com/emilyhorsman/elm-bitmap/" ]
         ]
 
 
@@ -304,12 +310,12 @@ drawInstructionPalette =
         drawButton ( label, command ) =
             button
                 [ onClick (Add command)
-                , Html.Attributes.style [ ( "margin", "1em" ) ]
+                , style [ ( "margin", "1em" ) ]
                 ]
                 [ text label ]
     in
         div
-            [ Html.Attributes.style [ ( "text-align", "center" ) ] ]
+            [ style [ ( "text-align", "center" ) ] ]
             (List.map drawButton commands)
 
 
@@ -331,7 +337,7 @@ numberInput current msg =
         , onInput msg
         , Html.Attributes.min "0"
         , Html.Attributes.max "127"
-        , Html.Attributes.style [ ( "margin", "0.25em" ) ]
+        , style [ ( "margin", "0.25em" ) ]
         ]
         []
 
@@ -388,7 +394,7 @@ drawInstructionCommands index instruction =
 drawUserInstruction : Int -> Instruction -> Html Msg
 drawUserInstruction index instruction =
     tr
-        [ Html.Attributes.style [ ( "vertical-align", "top" ) ] ]
+        [ style [ ( "vertical-align", "top" ) ] ]
         (drawInstructionCommands index instruction
             ++ [ td [] [ button [ onClick (Remove index) ] [ text "Remove" ] ] ]
         )
@@ -398,7 +404,7 @@ drawUserInstructions : Instructions -> Html Msg
 drawUserInstructions instructions =
     Array.indexedMap drawUserInstruction instructions
         |> Array.toList
-        |> table [ Html.Attributes.style [ ( "width", "100%" ) ] ]
+        |> table [ style [ ( "width", "100%" ) ] ]
 
 
 drawInstruction : Instruction -> Bitmap -> Bitmap
@@ -566,5 +572,5 @@ drawInstructionCode instructions =
             "Bitmap.create 64 (Bitmap.Pixel 200 255 255 1)" :: writtenInstructions
     in
         div
-            [ Html.Attributes.style [ ( "font-family", "monospace" ), ( "white-space", "pre" ) ] ]
+            [ style [ ( "font-family", "monospace" ), ( "white-space", "pre" ) ] ]
             [ String.join "\n" lines |> text ]
