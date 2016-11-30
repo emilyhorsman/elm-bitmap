@@ -26,19 +26,28 @@ main =
         }
 
 
+type Instruction
+    = Circle Bitmap.Pixel Bitmap.Point Int
+    | Curve Bitmap.Pixel (List Bitmap.FloatPoint)
+    | Line Bitmap.Pixel Bitmap.Point Bitmap.Point
+
+
 type alias Model =
     { bitmap : Bitmap.Bitmap
+    , instructions : List Instruction
     }
 
 
 init : Model
 init =
-    { bitmap =
-        Bitmap.create 64 cyan
-            |> Bitmap.circle black ( 43, 40 ) 3
-            |> Bitmap.circle black ( 20, 40 ) 3
-            |> Bitmap.circle black ( 31, 31 ) 25
-            |> Bitmap.curve black [ ( 15, 25 ), ( 31.5, 10 ), ( 48, 25 ) ]
+    { bitmap = Bitmap.create 64 cyan
+    , instructions =
+        [ Circle black ( 43, 40 ) 3
+        , Circle black ( 20, 40 ) 3
+        , Circle black ( 31, 31 ) 25
+        , Curve black [ ( 15, 25 ), ( 31.5, 10 ), ( 48, 25 ) ]
+        , Line black ( 0, 0 ) ( 63, 63 )
+        ]
     }
 
 
@@ -59,8 +68,28 @@ view model =
             , ( "width", "400px" )
             ]
         ]
-        [ drawBitmap model.bitmap
+        [ model.bitmap
+            |> withInstructions model.instructions
+            |> drawBitmap
         ]
+
+
+drawInstruction : Instruction -> Bitmap -> Bitmap
+drawInstruction instruction bitmap =
+    case instruction of
+        Circle pixel point radius ->
+            Bitmap.circle pixel point radius bitmap
+
+        Curve pixel points ->
+            Bitmap.curve pixel points bitmap
+
+        Line pixel p0 p1 ->
+            Bitmap.line pixel p0 p1 bitmap
+
+
+withInstructions : List Instruction -> Bitmap -> Bitmap
+withInstructions instructions bitmap =
+    List.foldl drawInstruction bitmap instructions
 
 
 pixelToAttribute : Bitmap.Pixel -> String
