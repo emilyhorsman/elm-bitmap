@@ -63,6 +63,7 @@ type Msg
     | Add Instruction
     | ChangePixel Int String
     | ChangeRadius Int String
+    | ChangePoint Int Int Int String
 
 
 removeInstruction : Int -> Instructions -> Instructions
@@ -131,6 +132,33 @@ changeRadius index value instructions =
         changeInstructions index transform instructions
 
 
+changePoint : Int -> Int -> Int -> String -> Instructions -> Instructions
+changePoint index pointIndex component value instructions =
+    let
+        newValue =
+            String.toInt value
+
+        transform instruction =
+            case ( newValue, pointIndex, component, instruction ) of
+                ( Ok x, 0, 0, Line pixel ( _, y) p1 ) ->
+                    Line pixel ( x, y ) p1
+
+                ( Ok y, 0, 1, Line pixel ( x, _ ) p1 ) ->
+                    Line pixel ( x, y ) p1
+
+                ( Ok x, 1, 0, Line pixel p0 ( _, y ) ) ->
+                    Line pixel p0 ( x, y )
+
+                ( Ok y, 1, 1, Line pixel p0 ( x, _ ) ) ->
+                    Line pixel p0 ( x, y )
+
+                _ ->
+                    instruction
+
+    in
+        changeInstructions index transform instructions
+
+
 update : Msg -> Model -> Model
 update msg model =
     case msg of
@@ -145,6 +173,9 @@ update msg model =
 
         ChangeRadius index value ->
             { model | instructions = changeRadius index value model.instructions }
+
+        ChangePoint index pointIndex component value ->
+            { model | instructions = changePoint index pointIndex component value model.instructions }
 
 
 view : Model -> Html Msg
@@ -183,47 +214,58 @@ drawInstructionPalette =
             (List.map drawButton commands)
 
 
+colourInput : String -> (String -> Msg) -> Html Msg
+colourInput current msg =
+    input
+        [ type' "color"
+        , value current
+        , onInput msg
+        ]
+        []
+
+
+numberInput : number -> (String -> Msg) -> Html Msg
+numberInput current msg =
+    input
+        [ type' "number"
+        , value (toString current)
+        , onInput msg
+        , Html.Attributes.min "0"
+        ]
+        []
+
+
+pointInput : ( number, number ) -> (Int -> String -> Msg) -> Html Msg
+pointInput ( x, y ) msg =
+    span
+        []
+        [ numberInput x (msg 0)
+        , numberInput y (msg 1)
+        ]
+
+
 drawInstructionCommands : Int -> Instruction -> Html Msg
 drawInstructionCommands index instruction =
     case instruction of
         Circle pixel ( x, y ) radius ->
             span []
                 [ text "Circle"
-                , input
-                    [ type' "color"
-                    , value (pixelToHex pixel)
-                    , onInput (ChangePixel index)
-                    ]
-                    []
-                , input
-                    [ type' "number"
-                    , value (toString radius)
-                    , onInput (ChangeRadius index)
-                    , Html.Attributes.min "0"
-                    ]
-                    []
+                , colourInput (pixelToHex pixel) (ChangePixel index)
+                , numberInput radius (ChangeRadius index)
                 ]
 
         Curve pixel points ->
             span []
                 [ text "Curve"
-                , input
-                    [ type' "color"
-                    , value (pixelToHex pixel)
-                    , onInput (ChangePixel index)
-                    ]
-                    []
+                , colourInput (pixelToHex pixel) (ChangePixel index)
                 ]
 
         Line pixel p0 p1 ->
             span []
                 [ text "Line"
-                , input
-                    [ type' "color"
-                    , value (pixelToHex pixel)
-                    , onInput (ChangePixel index)
-                    ]
-                    []
+                , colourInput (pixelToHex pixel) (ChangePixel index)
+                , pointInput p0 (ChangePoint index 0)
+                , pointInput p1 (ChangePoint index 1)
                 ]
 
 
