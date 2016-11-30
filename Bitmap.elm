@@ -376,7 +376,7 @@ curve : Pixel -> List FloatPoint -> Bitmap -> Bitmap
 curve pixel points bitmap =
     let
         segments =
-            50
+            100
 
         tValues =
             List.map (\i -> i / segments) [1..segments]
