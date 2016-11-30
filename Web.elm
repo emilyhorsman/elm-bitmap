@@ -46,20 +46,23 @@ type alias Model =
 init : Model
 init =
     { bitmap = Bitmap.create 64 cyan
-    , instructions = Array.fromList
-        [ Circle black ( 43, 40 ) 3
-        , Circle black ( 20, 40 ) 3
-        , Circle black ( 31, 31 ) 25
-        , Curve black [ ( 15, 25 ), ( 31.5, 10 ), ( 48, 25 ) ]
-        , Line black ( 0, 0 ) ( 63, 63 )
-        ]
+    , instructions =
+        Array.fromList
+            [ Circle black ( 43, 40 ) 3
+            , Circle black ( 20, 40 ) 3
+            , Circle black ( 31, 31 ) 25
+            , Curve black [ ( 15, 25 ), ( 31.5, 10 ), ( 48, 25 ) ]
+            , Line black ( 0, 0 ) ( 63, 63 )
+            ]
     }
 
 
 type Msg
     = Remove Int
+    | Add Instruction
 
 
+removeInstruction : Int -> Instructions -> Instructions
 removeInstruction index instructions =
     let
         a =
@@ -77,6 +80,9 @@ update msg model =
         Remove index ->
             { model | instructions = removeInstruction index model.instructions }
 
+        Add instruction ->
+            { model | instructions = Array.push instruction model.instructions }
+
 
 view : Model -> Html Msg
 view model =
@@ -91,7 +97,27 @@ view model =
             |> drawBitmap
         , model.instructions
             |> drawUserInstructions
+        , drawInstructionPalette
         ]
+
+
+drawInstructionPalette : Html Msg
+drawInstructionPalette =
+    let
+        commands =
+            [ ( "Circle", Circle black ( 31, 31 ) 5 )
+            , ( "Curve", Curve black [ ( 0, 63 ), ( 31.5, 53 ), ( 63, 63 ) ] )
+            , ( "Line", Line black ( 0, 0 ) ( 63, 0 ) )
+            ]
+
+        drawButton ( label, command ) =
+            button
+                [ onClick (Add command) ]
+                [ text label ]
+    in
+        div
+            []
+            (List.map drawButton commands)
 
 
 drawUserInstruction : Int -> Instruction -> Html Msg
