@@ -62,6 +62,7 @@ type Msg
     = Remove Int
     | Add Instruction
     | ChangePixel Int String
+    | ChangeRadius Int String
 
 
 removeInstruction : Int -> Instructions -> Instructions
@@ -76,16 +77,30 @@ removeInstruction index instructions =
         Array.append a b
 
 
+changeInstructions : Int -> (Instruction -> Instruction) -> Instructions -> Instructions
+changeInstructions index transform instructions =
+    let
+        instruction =
+            Array.get index instructions
+
+        nextInstruction =
+            Maybe.map transform instruction
+    in
+        case nextInstruction of
+            Just instr ->
+                Array.set index instr instructions
+
+            Nothing ->
+                instructions
+
+
 changePixel : Int -> String -> Instructions -> Instructions
 changePixel index value instructions =
     let
         newPixel =
             hexToPixel value
 
-        instruction =
-            Array.get index instructions
-
-        transformInstruction instruction =
+        transform instruction =
             case instruction of
                 Circle _ point radius ->
                     Circle newPixel point radius
@@ -95,16 +110,25 @@ changePixel index value instructions =
 
                 Line _ p0 p1 ->
                     Line newPixel p0 p1
-
-        nextInstruction =
-            Maybe.map transformInstruction instruction
     in
-        case nextInstruction of
-            Just instr ->
-                Array.set index instr instructions
+        changeInstructions index transform instructions
 
-            Nothing ->
-                instructions
+
+changeRadius : Int -> String -> Instructions -> Instructions
+changeRadius index value instructions =
+    let
+        newValue =
+            String.toInt value
+
+        transform instruction =
+            case ( newValue, instruction ) of
+                ( Ok v, Circle pixel point _ ) ->
+                    Circle pixel point v
+
+                _ ->
+                    instruction
+    in
+        changeInstructions index transform instructions
 
 
 update : Msg -> Model -> Model
@@ -118,6 +142,9 @@ update msg model =
 
         ChangePixel index value ->
             { model | instructions = changePixel index value model.instructions }
+
+        ChangeRadius index value ->
+            { model | instructions = changeRadius index value model.instructions }
 
 
 view : Model -> Html Msg
@@ -166,6 +193,13 @@ drawInstructionCommands index instruction =
                     [ type' "color"
                     , value (pixelToHex pixel)
                     , onInput (ChangePixel index)
+                    ]
+                    []
+                , input
+                    [ type' "number"
+                    , value (toString radius)
+                    , onInput (ChangeRadius index)
+                    , Html.Attributes.min "0"
                     ]
                     []
                 ]
