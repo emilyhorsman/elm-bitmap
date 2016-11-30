@@ -1,4 +1,16 @@
-module Bitmap exposing (Bitmap, Pixel(..), create, set, toggle, line, circle, cubicBezier, quadraticBezier, curve)
+module Bitmap
+    exposing
+        ( Bitmap
+        , FloatPoint
+        , Pixel(..)
+        , Point
+        , circle
+        , create
+        , curve
+        , line
+        , set
+        , toggle
+        )
 
 import Array exposing (Array)
 import Color
@@ -296,10 +308,9 @@ bresenhamCirclePlot plot radius x y error bitmap =
 
             ( nextX, nextError ) =
                 if shouldDecrementX then
-                    ( x - 1, error + 2 + 2 * (y + 1) - 2 * (x - 1))
+                    ( x - 1, error + 2 + 2 * (y + 1) - 2 * (x - 1) )
                 else
                     ( x, error + 1 + 2 * (y + 1) )
-
         in
             bresenhamCirclePlot plot radius nextX (y + 1) nextError nextBitmap
 
@@ -317,99 +328,6 @@ circle pixel origin radius bitmap =
             closedRange 0 radius
     in
         bresenhamCirclePlot plot radius radius 0 0 bitmap
-
-
-computeQuadraticBezierPoint : Point -> Point -> Point -> Int -> Int -> Point
-computeQuadraticBezierPoint ( x0, y0 ) ( x1, y1 ) ( x2, y2 ) segments i =
-    let
-        t =
-            (toFloat i) / (toFloat segments)
-
-        a =
-            (1 - t) ^ 2
-
-        b =
-            2 * t * (1 - t)
-
-        c =
-            t ^ 2
-
-        x =
-            floor (a * (toFloat x0) + b * (toFloat x1) + c * (toFloat x2))
-
-        y =
-            floor (a * (toFloat y0) + b * (toFloat y1) * c * (toFloat y2))
-    in
-        ( x, y )
-
-
-plotQuadraticBezier : Pixel -> List Point -> Bitmap -> Bitmap
-plotQuadraticBezier pixel points bitmap =
-    case points of
-        p0 :: p1 :: remainder ->
-            line pixel p0 p1 bitmap
-                |> plotQuadraticBezier pixel (p1 :: remainder)
-
-        _ ->
-            bitmap
-
-
-quadraticBezier : Pixel -> Point -> Point -> Point -> Int -> Bitmap -> Bitmap
-quadraticBezier pixel p0 p1 p2 segments bitmap =
-    let
-        points =
-            [0..segments]
-                |> List.map (computeQuadraticBezierPoint p0 p1 p2 segments)
-    in
-        plotQuadraticBezier pixel points bitmap
-
-
-computeCubicBezierPoint : Point -> Point -> Point -> Point -> Int -> Int -> Point
-computeCubicBezierPoint ( x0, y0 ) ( x1, y1 ) ( x2, y2 ) ( x3, y3 ) segments i =
-    let
-        t =
-            (toFloat i) / (toFloat segments)
-
-        a =
-            (1 - t) ^ 3
-
-        b =
-            3 * t * (1 - t) ^ 2
-
-        c =
-            3 * t ^ 2 * (1 - t)
-
-        d =
-            t ^ 3
-
-        x =
-            floor (a * (toFloat x0) + b * (toFloat x1) + c * (toFloat x2) + d * (toFloat x3))
-
-        y =
-            floor (a * (toFloat y0) + b * (toFloat y1) * c * (toFloat y2) * d * (toFloat y3))
-    in
-        ( x, y )
-
-
-plotCubicBezier : Pixel -> List Point -> Bitmap -> Bitmap
-plotCubicBezier pixel points bitmap =
-    case points of
-        p0 :: p1 :: remainder ->
-            line pixel p0 p1 bitmap
-                |> plotCubicBezier pixel (p1 :: remainder)
-
-        _ ->
-            bitmap
-
-
-cubicBezier : Pixel -> Point -> Point -> Point -> Point -> Int -> Bitmap -> Bitmap
-cubicBezier pixel p0 p1 p2 p3 segments bitmap =
-    let
-        points =
-            [0..segments]
-                |> List.map (computeCubicBezierPoint p0 p1 p2 p3 segments)
-    in
-        plotCubicBezier pixel points bitmap
 
 
 computeBezierPoint : Float -> FloatPoint -> FloatPoint -> FloatPoint
