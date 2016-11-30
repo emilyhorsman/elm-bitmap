@@ -50,7 +50,7 @@ init =
     { bitmap = Bitmap.create 64 cyan
     , instructions =
         Array.fromList
-            [ Circle (Bitmap.Pixel 51 153 255 1) ( 43, 40 ) 3
+            [ Circle black ( 43, 40 ) 3
             , Circle black ( 20, 40 ) 3
             , Circle black ( 31, 31 ) 25
             , Curve black [ ( 15, 25 ), ( 31.5, 10 ), ( 48, 25 ) ]
@@ -525,7 +525,7 @@ drawInstructionCode instructions =
             "    |> " ++ str
 
         serializePixel (Bitmap.Pixel r g b a) =
-            "(Bitmap.Pixel " ++ (toString r) ++ "," ++ (toString g) ++ "," ++ (toString b) ++ "," ++ (toString a) ++ ")"
+            "(Bitmap.Pixel " ++ (toString r) ++ " " ++ (toString g) ++ " " ++ (toString b) ++ " " ++ (toString a) ++ ")"
 
         write instruction =
             let
@@ -554,7 +554,7 @@ drawInstructionCode instructions =
                 String.join " " symbols
 
         lines =
-            "Bitmap.create 64 white" :: writtenInstructions
+            "Bitmap.create 64 (Bitmap.Pixel 200 255 255 1)" :: writtenInstructions
     in
         div
             [ Html.Attributes.style [ ( "font-family", "monospace" ), ( "white-space", "pre" ) ] ]
