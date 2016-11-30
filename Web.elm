@@ -2,7 +2,7 @@ module Web exposing (..)
 
 import Array exposing (Array)
 import Char
-import Html exposing (Html, div, button, text, input, span)
+import Html exposing (Html, div, button, text, input, span, table, tr, td)
 import Html.App as App
 import Html.Attributes exposing (type', value)
 import Html.Events exposing (onClick, onInput)
@@ -290,18 +290,20 @@ drawInstructionPalette : Html Msg
 drawInstructionPalette =
     let
         commands =
-            [ ( "Circle", Circle black ( 31, 31 ) 5 )
-            , ( "Curve", Curve black [ ( 0, 63 ), ( 31.5, 53 ), ( 63, 63 ) ] )
-            , ( "Line", Line black ( 0, 0 ) ( 63, 0 ) )
+            [ ( "Add Circle", Circle black ( 31, 31 ) 5 )
+            , ( "Add Curve", Curve black [ ( 0, 63 ), ( 31.5, 53 ), ( 63, 63 ) ] )
+            , ( "Add Line", Line black ( 0, 0 ) ( 63, 0 ) )
             ]
 
         drawButton ( label, command ) =
             button
-                [ onClick (Add command) ]
+                [ onClick (Add command)
+                , Html.Attributes.style [ ( "margin", "1em" ) ]
+                ]
                 [ text label ]
     in
         div
-            []
+            [ Html.Attributes.style [ ( "text-align", "center" ) ] ]
             (List.map drawButton commands)
 
 
@@ -323,6 +325,7 @@ numberInput current msg =
         , onInput msg
         , Html.Attributes.min "0"
         , Html.Attributes.max "127"
+        , Html.Attributes.style [ ( "margin", "0.25em" ) ]
         ]
         []
 
@@ -341,52 +344,52 @@ drawInstructionPoint index pointIndex point =
     div
         []
         [ pointInput point (ChangeFloatPoint index pointIndex)
-        , button [ onClick (RemoveFloatPoint index pointIndex) ] [ text "Remove Point" ]
+        , button [ onClick (RemoveFloatPoint index pointIndex) ] [ text "Remove" ]
         ]
 
 
-drawInstructionCommands : Int -> Instruction -> Html Msg
+drawInstructionCommands : Int -> Instruction -> List (Html Msg)
 drawInstructionCommands index instruction =
     case instruction of
         Circle pixel ( x, y ) radius ->
-            span []
-                [ text "Circle"
-                , colourInput (pixelToHex pixel) (ChangePixel index)
-                , numberInput radius (ChangeRadius index)
-                ]
+            [ td [] [ text "Circle" ]
+            , td [] [ colourInput (pixelToHex pixel) (ChangePixel index) ]
+            , td [] [ numberInput radius (ChangeRadius index) ]
+            ]
 
         Curve pixel points ->
-            span []
-                ([ text "Curve"
-                 , colourInput (pixelToHex pixel) (ChangePixel index)
-                 , button [ onClick (AddFloatPoint index) ] [ text "Add Point" ]
-                 ]
-                    ++ List.indexedMap (drawInstructionPoint index) points
+            [ td [] [ text "Curve" ]
+            , td [] [ colourInput (pixelToHex pixel) (ChangePixel index) ]
+            , td []
+                (List.indexedMap (drawInstructionPoint index) points
+                    ++ [ button [ onClick (AddFloatPoint index) ] [ text "Add Point" ] ]
                 )
+            ]
 
         Line pixel p0 p1 ->
-            span []
-                [ text "Line"
-                , colourInput (pixelToHex pixel) (ChangePixel index)
-                , pointInput p0 (ChangePoint index 0)
-                , pointInput p1 (ChangePoint index 1)
+            [ td [] [ text "Line" ]
+            , td [] [ colourInput (pixelToHex pixel) (ChangePixel index) ]
+            , td []
+                [ div [] [ pointInput p0 (ChangePoint index 0) ]
+                , div [] [ pointInput p1 (ChangePoint index 1) ]
                 ]
+            ]
 
 
 drawUserInstruction : Int -> Instruction -> Html Msg
 drawUserInstruction index instruction =
-    div
-        []
-        [ drawInstructionCommands index instruction
-        , button [ onClick (Remove index) ] [ text "Remove" ]
-        ]
+    tr
+        [ Html.Attributes.style [ ( "vertical-align", "top" ) ] ]
+        (drawInstructionCommands index instruction
+            ++ [ td [] [ button [ onClick (Remove index) ] [ text "Remove" ] ] ]
+        )
 
 
 drawUserInstructions : Instructions -> Html Msg
 drawUserInstructions instructions =
     Array.indexedMap drawUserInstruction instructions
         |> Array.toList
-        |> div []
+        |> table [ Html.Attributes.style [ ( "width", "100%" ) ] ]
 
 
 drawInstruction : Instruction -> Bitmap -> Bitmap
