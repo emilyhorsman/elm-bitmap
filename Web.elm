@@ -64,6 +64,7 @@ type Msg
     | ChangePixel Int String
     | ChangeRadius Int String
     | ChangePoint Int Int Int String
+    | ChangeFloatPoint Int Int Int String
 
 
 removeInstruction : Int -> Instructions -> Instructions
@@ -132,6 +133,43 @@ changeRadius index value instructions =
         changeInstructions index transform instructions
 
 
+changePoints : Int -> Int -> Float -> List Bitmap.FloatPoint -> List Bitmap.FloatPoint
+changePoints pointIndex component value points =
+    let
+        change index point =
+            if index == pointIndex then
+                case ( component, point ) of
+                    ( 0, ( _, y ) ) ->
+                        ( value, y )
+
+                    ( 1, ( x, _ ) ) ->
+                        ( x, value )
+
+                    _ ->
+                        point
+            else
+                point
+    in
+        List.indexedMap change points
+
+
+changeFloatPoint : Int -> Int -> Int -> String -> Instructions -> Instructions
+changeFloatPoint index pointIndex component value instructions =
+    let
+        newValue =
+            String.toFloat value
+
+        transform instruction =
+            case ( newValue, instruction ) of
+                ( Ok v, Curve pixel points ) ->
+                    Curve pixel (changePoints pointIndex component v points)
+
+                _ ->
+                    instruction
+    in
+        changeInstructions index transform instructions
+
+
 changePoint : Int -> Int -> Int -> String -> Instructions -> Instructions
 changePoint index pointIndex component value instructions =
     let
@@ -140,7 +178,7 @@ changePoint index pointIndex component value instructions =
 
         transform instruction =
             case ( newValue, pointIndex, component, instruction ) of
-                ( Ok x, 0, 0, Line pixel ( _, y) p1 ) ->
+                ( Ok x, 0, 0, Line pixel ( _, y ) p1 ) ->
                     Line pixel ( x, y ) p1
 
                 ( Ok y, 0, 1, Line pixel ( x, _ ) p1 ) ->
@@ -154,7 +192,6 @@ changePoint index pointIndex component value instructions =
 
                 _ ->
                     instruction
-
     in
         changeInstructions index transform instructions
 
@@ -176,6 +213,9 @@ update msg model =
 
         ChangePoint index pointIndex component value ->
             { model | instructions = changePoint index pointIndex component value model.instructions }
+
+        ChangeFloatPoint index pointIndex component value ->
+            { model | instructions = changeFloatPoint index pointIndex component value model.instructions }
 
 
 view : Model -> Html Msg
@@ -245,6 +285,11 @@ pointInput ( x, y ) msg =
         ]
 
 
+drawInstructionPoint : Int -> Int -> Bitmap.FloatPoint -> Html Msg
+drawInstructionPoint index pointIndex point =
+    pointInput point (ChangeFloatPoint index pointIndex)
+
+
 drawInstructionCommands : Int -> Instruction -> Html Msg
 drawInstructionCommands index instruction =
     case instruction of
@@ -257,9 +302,11 @@ drawInstructionCommands index instruction =
 
         Curve pixel points ->
             span []
-                [ text "Curve"
-                , colourInput (pixelToHex pixel) (ChangePixel index)
-                ]
+                ([ text "Curve"
+                 , colourInput (pixelToHex pixel) (ChangePixel index)
+                 ]
+                    ++ List.indexedMap (drawInstructionPoint index) points
+                )
 
         Line pixel p0 p1 ->
             span []
