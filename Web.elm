@@ -231,6 +231,7 @@ numberInput current msg =
         , value (toString current)
         , onInput msg
         , Html.Attributes.min "0"
+        , Html.Attributes.max "127"
         ]
         []
 
