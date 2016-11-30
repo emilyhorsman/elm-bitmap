@@ -192,6 +192,12 @@ changePoint index pointIndex component value instructions =
                 ( Ok y, 1, 1, Line pixel p0 ( x, _ ) ) ->
                     Line pixel p0 ( x, y )
 
+                ( Ok x, _, 0, Circle pixel ( _, y ) radius ) ->
+                    Circle pixel ( x, y ) radius
+
+                ( Ok y, _, 1, Circle pixel ( x, _ ) radius ) ->
+                    Circle pixel ( x, y ) radius
+
                 _ ->
                     instruction
     in
@@ -351,10 +357,13 @@ drawInstructionPoint index pointIndex point =
 drawInstructionCommands : Int -> Instruction -> List (Html Msg)
 drawInstructionCommands index instruction =
     case instruction of
-        Circle pixel ( x, y ) radius ->
+        Circle pixel point radius ->
             [ td [] [ text "Circle" ]
             , td [] [ colourInput (pixelToHex pixel) (ChangePixel index) ]
-            , td [] [ numberInput radius (ChangeRadius index) ]
+            , td []
+                [ numberInput radius (ChangeRadius index)
+                , pointInput point (ChangePoint index 0)
+                ]
             ]
 
         Curve pixel points ->
