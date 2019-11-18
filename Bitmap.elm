@@ -1,19 +1,17 @@
-module Bitmap
-    exposing
-        ( Bitmap
-        , FloatPoint
-        , Pixel(..)
-        , Point
-        , circle
-        , create
-        , curve
-        , line
-        , set
-        , toggle
-        )
+module Bitmap exposing
+    ( Bitmap
+    , FloatPoint
+    , Pixel(..)
+    , Point
+    , circle
+    , create
+    , curve
+    , line
+    , set
+    , toggle
+    )
 
 import Array exposing (Array)
-import Color
 import List
 
 
@@ -57,38 +55,40 @@ create length defaultFill =
 
 
 {-| colIndex => x-coordinate
-    rowIndex => y-coordinate
+rowIndex => y-coordinate
 -}
 set : Pixel -> Int -> Int -> Bitmap -> Bitmap
 set newFill colIndex rowIndex bitmap =
     let
-        set arr =
+        set_ arr =
             Array.set colIndex newFill arr
 
         newRow =
-            Maybe.map set (Array.get rowIndex bitmap)
+            Maybe.map set_ (Array.get rowIndex bitmap)
     in
-        case newRow of
-            Just row ->
-                Array.set rowIndex row bitmap
+    case newRow of
+        Just row ->
+            Array.set rowIndex row bitmap
 
-            Nothing ->
-                bitmap
+        Nothing ->
+            bitmap
 
 
 {-| colIndex => x-coordinate
-    rowIndex => y-coordinate
+rowIndex => y-coordinate
 -}
 get : Int -> Int -> Bitmap -> Maybe Pixel
 get colIndex rowIndex bitmap =
-    Maybe.andThen (Array.get rowIndex bitmap) (Array.get colIndex)
+    Maybe.andThen (Array.get colIndex) (Array.get rowIndex bitmap)
 
 
 {-| Swap between two pixel values (aPixel and bPixel). Does not modify the pixel
-    if it is neither value.
+if it is neither value.
 
-    colIndex => x-coordinate
-    rowIndex => y-coordinate
+    colIndex => x - coordinate
+
+    rowIndex => y - coordinate
+
 -}
 toggle : Pixel -> Pixel -> Int -> Int -> Bitmap -> Bitmap
 toggle aPixel bPixel colIndex rowIndex bitmap =
@@ -99,17 +99,19 @@ toggle aPixel bPixel colIndex rowIndex bitmap =
         alternate pixel =
             if pixel == aPixel then
                 bPixel
+
             else if pixel == bPixel then
                 aPixel
+
             else
                 pixel
     in
-        case curPixel of
-            Just pixel ->
-                set (alternate pixel) colIndex rowIndex bitmap
+    case curPixel of
+        Just pixel ->
+            set (alternate pixel) colIndex rowIndex bitmap
 
-            Nothing ->
-                bitmap
+        Nothing ->
+            bitmap
 
 
 closedRange : Int -> Int -> Array Int
@@ -122,15 +124,16 @@ closedRange from to =
         sign =
             if from <= to then
                 (+)
+
             else
                 (-)
     in
-        Array.initialize quantity identity |> Array.map (sign from)
+    Array.initialize quantity identity |> Array.map (sign from)
 
 
 {-| This function is designed to be used in a fold/reduce call. It should be
-    curried with some parameters based on the octant the function is operating
-    in.
+curried with some parameters based on the octant the function is operating
+in.
 
     The Bresenham line algorithm works by folding/iterating over consecutive
     numbers on an axis. The challenge then is to figure out when a point should
@@ -171,6 +174,7 @@ closedRange from to =
     Fold across the x-axis, such that `b` is our y-component.
     Note that Bitmap.set takes rowIndex before colIndex (y before x)
     bresenhamLinePlot (dy/dx) 1 -1 (\a b -> set pixel b a bitmap)
+
 -}
 bresenhamLinePlot : Float -> Int -> Float -> (Int -> Int -> Bitmap -> Bitmap) -> Int -> ( Bitmap, Float, Int ) -> ( Bitmap, Float, Int )
 bresenhamLinePlot slope delta correction plot a ( bitmap, error, b ) =
@@ -184,10 +188,11 @@ bresenhamLinePlot slope delta correction plot a ( bitmap, error, b ) =
         ( nextError, nextB ) =
             if shouldAdvance then
                 ( error + slope + correction, b + delta )
+
             else
                 ( error + slope, b )
     in
-        ( nextBitmap, nextError, nextB )
+    ( nextBitmap, nextError, nextB )
 
 
 line : Pixel -> Point -> Point -> Bitmap -> Bitmap
@@ -206,19 +211,19 @@ line pixel origin endpoint bitmap =
             y2 - y1
 
         m =
-            (toFloat dy) / (toFloat dx)
+            toFloat dy / toFloat dx
 
         -- We cannot use the traditional slope (y per x) if we plot through
         -- ys instead of xs. We would need to use the reciprocal slope, the
         -- units x per unit y.
         rM =
-            (toFloat dx) / (toFloat dy)
+            toFloat dx / toFloat dy
 
-        foldingAcrossX a b bitmap =
-            set pixel a b bitmap
+        foldingAcrossX a b bitmap_ =
+            set pixel a b bitmap_
 
-        foldingAcrossY a b bitmap =
-            set pixel b a bitmap
+        foldingAcrossY a b bitmap_ =
+            set pixel b a bitmap_
 
         ( plotFunc, interval, start ) =
             if 0 <= m && m <= 1 && x1 < x2 then
@@ -227,48 +232,56 @@ line pixel origin endpoint bitmap =
                 , closedRange x1 x2
                 , y1
                 )
+
             else if 1 < m && y1 < y2 then
                 -- Second octant.
                 ( bresenhamLinePlot rM 1 -1 foldingAcrossY
                 , closedRange y1 y2
                 , x1
                 )
+
             else if -1 > m && y1 < y2 then
                 -- Third octant.
                 ( bresenhamLinePlot rM 1 1 foldingAcrossY
                 , closedRange y2 y1
                 , x2
                 )
+
             else if 0 > m && m >= -1 && x2 < x1 then
                 -- Fourth octant.
                 ( bresenhamLinePlot m -1 1 foldingAcrossX
                 , closedRange x2 x1
                 , y2
                 )
+
             else if 0 < m && m <= 1 && x2 < x1 then
                 -- Fifth octant.
                 ( bresenhamLinePlot m 1 -1 foldingAcrossX
                 , closedRange x2 x1
                 , y2
                 )
+
             else if 1 < m && y2 < y1 then
                 -- Sixth octant.
                 ( bresenhamLinePlot rM 1 -1 foldingAcrossY
                 , closedRange y2 y1
                 , x2
                 )
+
             else if -1 > m && y2 < y1 then
                 -- Seventh octant.
                 ( bresenhamLinePlot rM 1 1 foldingAcrossY
                 , closedRange y1 y2
                 , x1
                 )
+
             else if 0 > m && m >= -1 && x1 < x2 then
                 -- Eighth octant.
                 ( bresenhamLinePlot m -1 1 foldingAcrossX
                 , closedRange x1 x2
                 , y1
                 )
+
             else
                 ( bresenhamLinePlot m 1 -1 foldingAcrossX
                 , closedRange x1 x2
@@ -278,7 +291,7 @@ line pixel origin endpoint bitmap =
         ( newBitmap, _, _ ) =
             Array.foldl plotFunc ( bitmap, 0, start ) interval
     in
-        newBitmap
+    newBitmap
 
 
 plotSymmetricalOctants : (Int -> Int -> Bitmap -> Bitmap) -> Bitmap -> Int -> Int -> Bitmap
@@ -298,6 +311,7 @@ bresenhamCirclePlot : (Int -> Int -> Bitmap -> Bitmap) -> Int -> Int -> Int -> I
 bresenhamCirclePlot plot radius x y error bitmap =
     if x < y then
         bitmap
+
     else
         let
             nextBitmap =
@@ -321,10 +335,11 @@ bresenhamCirclePlot plot radius x y error bitmap =
             ( nextX, nextError ) =
                 if shouldDecrementX then
                     ( x - 1, error + 2 + 2 * (y + 1) - 2 * (x - 1) )
+
                 else
                     ( x, error + 1 + 2 * (y + 1) )
         in
-            bresenhamCirclePlot plot radius nextX (y + 1) nextError nextBitmap
+        bresenhamCirclePlot plot radius nextX (y + 1) nextError nextBitmap
 
 
 circle : Pixel -> Point -> Int -> Bitmap -> Bitmap
@@ -339,7 +354,7 @@ circle pixel origin radius bitmap =
         interval =
             closedRange 0 radius
     in
-        bresenhamCirclePlot plot radius radius 0 0 bitmap
+    bresenhamCirclePlot plot radius radius 0 0 bitmap
 
 
 computeBezierPoint : Float -> FloatPoint -> FloatPoint -> FloatPoint
@@ -353,7 +368,7 @@ computeBezierPoints : Float -> List FloatPoint -> List FloatPoint
 computeBezierPoints t points =
     case points of
         p0 :: p1 :: remainder ->
-            computeBezierPoint t p0 p1 :: (computeBezierPoints t (p1 :: remainder))
+            computeBezierPoint t p0 p1 :: computeBezierPoints t (p1 :: remainder)
 
         _ ->
             []
@@ -368,6 +383,7 @@ plotCurve pixel points t bitmap =
 
             _ ->
                 bitmap
+
     else
         plotCurve pixel (computeBezierPoints t points) t bitmap
 
@@ -379,6 +395,6 @@ curve pixel points bitmap =
             100
 
         tValues =
-            List.map (\i -> i / segments) [1..segments]
+            List.map (\i -> toFloat i / segments) (List.range 1 segments)
     in
-        List.foldl (plotCurve pixel points) bitmap tValues
+    List.foldl (plotCurve pixel points) bitmap tValues
