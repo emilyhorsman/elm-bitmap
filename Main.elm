@@ -1,10 +1,11 @@
 module Main exposing (..)
 
-import Bitmap
-import GraphicSVG exposing (..)
-import List
 import Array
+import Bitmap
 import Debug exposing (log)
+import GraphicSVG exposing (..)
+import GraphicSVG.App exposing (..)
+import List
 
 
 drawPixel rowIndex colIndex pixel =
@@ -13,15 +14,15 @@ drawPixel rowIndex colIndex pixel =
             pixel
 
         x =
-            (toFloat colIndex) * cellSize
+            toFloat colIndex * cellSize
 
         y =
-            (toFloat rowIndex) * cellSize
+            toFloat rowIndex * cellSize
     in
-        square cellSize
-            |> filled (rgba (toFloat r) (toFloat g) (toFloat b) a)
-            |> move ( x, y )
-            |> notifyTap (Toggle colIndex rowIndex)
+    square cellSize
+        |> filled (rgba (toFloat r) (toFloat g) (toFloat b) a)
+        |> move ( x, y )
+        |> notifyTap (Toggle colIndex rowIndex)
 
 
 drawBitmap bitmap =
@@ -31,9 +32,9 @@ drawBitmap bitmap =
                 |> Array.toList
                 |> group
     in
-        Array.indexedMap drawRow bitmap
-            |> Array.toList
-            |> group
+    Array.indexedMap drawRow bitmap
+        |> Array.toList
+        |> group
 
 
 white =
@@ -58,6 +59,7 @@ main =
         { model = init
         , view = view
         , update = update
+        , title = "elm-bitmap"
         }
 
 
@@ -77,10 +79,10 @@ view model =
         center =
             move ( cellSize * -32, cellSize * -32 )
     in
-        collage 600
-            600
-            [ drawBitmap model.bitmap |> center
-            ]
+    collage 600
+        600
+        [ drawBitmap model.bitmap |> center
+        ]
 
 
 update message model =
